@@ -12,7 +12,8 @@ fi
 
 if [ "$1" == "update" ]; then
 	echo "Updating validate.sh..."
-	wget https://raw.githubusercontent.com/SimonLiu423/2023-ncku-pd2/main/validate.sh
+	SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+	wget -O $SCRIPT_DIR/validate.sh https://raw.githubusercontent.com/SimonLiu423/2023-ncku-pd2/main/validate.sh
 	echo "Done!"
 	exit 1
 fi

@@ -10,6 +10,12 @@ if [ $# -eq 0 ]; then
 	exit 1
 fi
 
+if [ "$1" == "update" ]; then
+	echo "Updating validate.sh..."
+	wget https://raw.githubusercontent.com/SimonLiu423/2023-ncku-pd2/main/validate.sh
+	echo "Done!"
+	exit 1
+fi
 
 MEASURE_TIME="false"
 MEASURE_SAMPLE=20
@@ -124,4 +130,7 @@ elif [ "$HW" == "hw3" ] || [ "$HW" == "hw4" ]; then
 
 		echo ""
     done
+else
+	echo Script for $HW not found, try updating the script by running ./validate.sh update
 fi
+

@@ -51,10 +51,14 @@ HW_PATH=$HOME/$HW
 HW_EXEC=$HW_PATH/$HW
 ANS_PATH=$HW_PATH/answer
 RES_PATH=$HW_PATH/results
-declare -A input_prefix=(   ["hw1"]="result_" ["hw2"]="hw2_test" ["hw3"]="hw3_test" ["hw4"]="hw4_test" )
-declare -A input_postfix=(  ["hw1"]=""        ["hw2"]=".csv"     ["hw3"]=".csv"     ["hw4"]=".csv" )
-declare -A output_prefix=(  ["hw1"]="result_" ["hw2"]="result_"   ["hw3"]="result_"   ["hw4"]="result_" )
-declare -A output_postfix=( ["hw1"]=""        ["hw2"]=""         ["hw3"]=""         ["hw4"]="" )
+declare -A input_prefix=(   ["hw1"]="result_" ["hw2"]="hw2_test" ["hw3"]="hw3_test" ["hw4"]="hw4_test" \
+                            ["hw5"]="corpus_" )
+declare -A input_postfix=(  ["hw1"]=""        ["hw2"]=".csv"     ["hw3"]=".csv"     ["hw4"]=".csv" \
+                            ["hw5"]=".txt" )
+declare -A output_prefix=(  ["hw1"]="result_" ["hw2"]="result_"   ["hw3"]="result_"   ["hw4"]="result_" \
+                            ["hw5"]="result" )
+declare -A output_postfix=( ["hw1"]=""        ["hw2"]=""         ["hw3"]=""         ["hw4"]="" \
+                            ["hw5"]="" )
 
 declare -A f_input_prefix=(   ["hw1"]=""            ["hw2"]="hw2_test" ["hw3"]="problem_" )
 declare -A f_input_postfix=(  ["hw1"]="_output.txt" ["hw2"]=".csv"     ["hw3"]=".csv" )
@@ -64,7 +68,7 @@ declare -A f_output_postfix=( ["hw1"]="_output.txt" ["hw2"]=""         ["hw3"]="
 
 exec_and_measure () {
 	for ((i=0; i < $MEASURE_SAMPLE; i++)); do
-	    { time $HW_EXEC "$1" > $RES_PATH/"$2""$N""$3"; } 2>&1
+	    { time $HW_EXEC $1 > $RES_PATH/"$2""$N""$3"; } 2>&1
 	done | awk -F 'm' '
 	    /real/ { real = real + $2; nr++ }
 	    /user/ { user = user + $2; nu++ }
@@ -120,6 +124,13 @@ hw4_parse () {
 	echo "$(hw3_parse "$1")"
 }
 
+hw5_parse () {
+   	read -ra str <<< $1
+	IFS='.'
+	read -ra str <<< ${str[-1]}
+	echo "${str[0]}"
+}
+
 if [ $# -eq 0 ]; then
     echo Expected hw name
     exit 0
@@ -137,7 +148,14 @@ fi
 if [ $USE_FORMAL == "true" ]; then
 	cp -r /home/share/$HW/formalData $ANS_PATH
 else
-	cp -r /home/share/$HW $ANS_PATH
+	if [ $HW == "hw5" ]; then
+		cp -r /home/share/hw5/testcase2 $ANS_PATH 	
+		cp /home/share/hw5/testcase1/corpus1.txt $ANS_PATH/corpus_1.txt
+		cp /home/share/hw5/testcase1/query1.txt $ANS_PATH/query_1.txt
+		cp /home/share/hw5/testcase1/result1 $ANS_PATH/
+	else
+		cp -r /home/share/$HW $ANS_PATH
+	fi
 fi
 if [ -v TEST_PATH ]; then
 	cp $TEST_PATH/* $ANS_PATH
@@ -168,12 +186,18 @@ run_tests () {
 		if [ $MEASURE_TIME == "true" ]; then
 			if [ "$HW" == "hw1" ]; then
 				exec_and_measure "$N" "$out_pre" "$out_post"
+			elif [ "$HW" == "hw5" ]; then
+				inputs="$file $ANS_PATH/query_$N.txt"
+				exec_and_measure "$inputs" "$out_pre" "$out_post"
 			else
 				exec_and_measure "$file" "$out_pre" "$out_post"
 			fi
 		else
 			if [ "$HW" == "hw1" ]; then
 				$HW_EXEC "$N" > $RES_PATH/"$out_pre"$N"$out_post"
+			elif [ "$HW" == "hw5" ]; then
+				inputs="$file $ANS_PATH/query_$N.txt"
+				$HW_EXEC $inputs > $RES_PATH/"$out_pre"$N"$out_post"
 			else
 				$HW_EXEC "$file" > $RES_PATH/"$out_pre"$N"$out_post"
 			fi

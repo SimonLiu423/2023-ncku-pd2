@@ -149,7 +149,14 @@ if [ $USE_FORMAL == "true" ]; then
 	cp -r /home/share/$HW/formalData $ANS_PATH
 else
 	if [ $HW == "hw5" ]; then
-		cp -r /home/share/hw5/testcase2 $ANS_PATH 	
+		mkdir $ANS_PATH
+		cp -r /home/share/hw5/testcase2/* $ANS_PATH/	
+		cp -r /home/share/hw5/testcase3/* $ANS_PATH/	
+		cp -r /home/share/hw5/testcase4/* $ANS_PATH/	
+		cp -r /home/share/hw5/testcase5/* $ANS_PATH/	
+		mv $ANS_PATH/result_002 $ANS_PATH/result002
+		mv $ANS_PATH/result_003 $ANS_PATH/result003
+		mv $ANS_PATH/result_004 $ANS_PATH/result004
 		cp /home/share/hw5/testcase1/corpus1.txt $ANS_PATH/corpus_1.txt
 		cp /home/share/hw5/testcase1/query1.txt $ANS_PATH/query_1.txt
 		cp /home/share/hw5/testcase1/result1 $ANS_PATH/

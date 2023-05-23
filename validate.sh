@@ -6,7 +6,7 @@ print_usage () {
 	echo "  -m		Measure execution time"
 	echo "  -d		Print diff detail"
 	echo "  -n <cnt>	Measure execution time by taking the mean of running the program <cnt> times. Default is 20"
-	echo "  -t <path>	Also copies test data from <path>"
+#	echo "  -t <path>	Also copies test data from <path>"
 	echo "  -f		Use formal test cases"
 	exit 1
 }
@@ -39,7 +39,7 @@ do
 		d ) DIFF_DETAIL="true";;
 		f ) USE_FORMAL="true";;
 		n ) MEASURE_SAMPLE=${OPTARG};;
-		t ) CUSTOM_PATH=${OPTARG};;
+#		t ) CUSTOM_PATH=${OPTARG};;
 		\?) echo "$0: Error: Invalid option: -${OPTARG}" >&2; exit 1;;
 		: ) echo "$0: Error: option -${OPTARG} requires an argument" >&2; exit 1;;
 	esac
@@ -126,9 +126,9 @@ fi
 
 cp -r /home/share/$HW/* $ANS_PATH/
 
-if [ -v CUSTOM_PATH ]; then
-	cp $CUSTOM_PATH/* $ANS_PATH
-fi
+# if [ -v CUSTOM_PATH ]; then
+# 	cp $CUSTOM_PATH/* $ANS_PATH
+# fi
 
 if ! [ -e $RES_PATH ]; then
     mkdir $RES_PATH

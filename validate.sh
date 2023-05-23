@@ -32,7 +32,7 @@ MEASURE_SAMPLE=20
 DIFF_DETAIL="false"
 USE_FORMAL="false"
 
-while getopts ":mdn:t:f" OPTION
+while getopts ":mdn:f" OPTION
 do
 	case "${OPTION}" in
 		m ) MEASURE_TIME="true";;

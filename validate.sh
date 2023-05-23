@@ -39,7 +39,7 @@ do
 		d ) DIFF_DETAIL="true";;
 		f ) USE_FORMAL="true";;
 		n ) MEASURE_SAMPLE=${OPTARG};;
-		t ) TEST_PATH=${OPTARG};;
+		t ) CUSTOM_PATH=${OPTARG};;
 		\?) echo "$0: Error: Invalid option: -${OPTARG}" >&2; exit 1;;
 		: ) echo "$0: Error: option -${OPTARG} requires an argument" >&2; exit 1;;
 	esac
@@ -51,24 +51,73 @@ HW_PATH=$HOME/$HW
 HW_EXEC=$HW_PATH/$HW
 ANS_PATH=$HW_PATH/answer
 RES_PATH=$HW_PATH/results
-declare -A input_prefix=(   ["hw1"]="result_" ["hw2"]="hw2_test" ["hw3"]="hw3_test" ["hw4"]="hw4_test" \
-                            ["hw5"]="corpus_" )
-declare -A input_postfix=(  ["hw1"]=""        ["hw2"]=".csv"     ["hw3"]=".csv"     ["hw4"]=".csv" \
-                            ["hw5"]=".txt" )
-declare -A output_prefix=(  ["hw1"]="result_" ["hw2"]="result_"   ["hw3"]="result_"   ["hw4"]="result_" \
-                            ["hw5"]="result" )
-declare -A output_postfix=( ["hw1"]=""        ["hw2"]=""         ["hw3"]=""         ["hw4"]="" \
-                            ["hw5"]="" )
+TEST_PATH=$ANS_PATH
 
-declare -A f_input_prefix=(   ["hw1"]=""            ["hw2"]="hw2_test" ["hw3"]="problem_" )
-declare -A f_input_postfix=(  ["hw1"]="_output.txt" ["hw2"]=".csv"     ["hw3"]=".csv" )
-declare -A f_output_prefix=(  ["hw1"]=""            ["hw2"]="result_"  ["hw3"]="answer_" )
-declare -A f_output_postfix=( ["hw1"]="_output.txt" ["hw2"]=""         ["hw3"]="" )
+if [ "$HW" == "hw5" ] || [ "$HW" == "hw6" ]; then
+	TEST_PATH="$TEST_PATH/testcase{}"
+fi
 
+if [ $# -eq 0 ]; then
+    echo Expected hw name
+    exit 0
+fi
+
+# if [[ ! ($(type -t "$HW"_parse) == function) ]]; then
+# 	echo Script for $HW not found, try updating the script by running ./validate.sh update
+# 	exit 1
+# fi
+
+if [ -e $ANS_PATH ]; then
+    rm -rf $ANS_PATH/*
+else
+	mkdir $ANS_PATH
+fi
+
+
+if [ $USE_FORMAL == "true" ]; then
+	cp -r /home/share/$HW/formalData/* $ANS_PATH/
+else
+	cp -r /home/share/$HW/* $ANS_PATH/
+fi
+
+if [ -v CUSTOM_PATH ]; then
+	cp $CUSTOM_PATH/* $ANS_PATH
+fi
+
+if ! [ -e $RES_PATH ]; then
+    mkdir $RES_PATH
+fi
+rm $RES_PATH/*
+
+make --directory $HW_PATH -k clean all
+
+hw1_args=(1 120 158 370 850 1000)
+hw2_args=(1 2 3)
+hw3_args=(0 1 2 3 4 5)
+hw4_args=(1 2 3 4)
+hw5_args=(1 2 3 4 5)
+hw6_args=(1)
+
+hw2_inputs="$TEST_PATH/hw2_test{}.csv"
+hw3_inputs="$TEST_PATH/hw3_test{}.csv"
+hw4_inputs="$TEST_PATH/hw4_test{}.csv"
+hw5_inputs="$TEST_PATH/corpus_00{}.txt $TEST_PATH/query_00{}.txt"
+hw6_inputs="$TEST_PATH/corpus{} $TEST_PATH/query{} 3"
+
+hw1_result="result_{}"
+hw2_result="result_{}"
+hw3_result="result_{}"
+hw4_result="result_{}"
+hw5_result="result_00{}"
+hw6_result="result_corpus{}_query{}_3"
 
 exec_and_measure () {
+	N=$1
+	cmd="$2"
+	inputs=${HW}_inputs
+	result=${HW}_result
 	for ((i=0; i < $MEASURE_SAMPLE; i++)); do
-	    { time $HW_EXEC $1 > $RES_PATH/"$2""$N""$3"; } 2>&1
+	    { time echo $N | eval $cmd; } 2>&1
 	done | awk -F 'm' '
 	    /real/ { real = real + $2; nr++ }
 	    /user/ { user = user + $2; nu++ }
@@ -81,148 +130,24 @@ exec_and_measure () {
 
 }
 
-hw1_parse () {
-	if [ "$USE_FORMAL" == "true" ]; then
-		IFS='/'
-		read -ra str <<< $1
-		IFS='_'	
-		read -ra str <<< ${str[-1]}
-		echo "${str[0]}"
-	else
-		read -ra str <<< $1
-		echo "${str[1]}"
-	fi
-}
-
-hw2_parse () {
-    read -ra str <<< $1
-    IFS='.'
-    read -ra str <<< ${str[1]}
-    IFS='test'
-    read -ra str <<< ${str[0]}
-
-    echo "${str[4]}"	
-}
-
-hw3_parse () {
-   	read -ra str <<< $1
-	if [ "$USE_FORMAL" == "true" ]; then
-		IFS='.'
-		read -ra str <<< ${str[-1]}
-		echo "${str[0]}"	
-	else
-   	    IFS='.'
-   	    read -ra str <<< ${str[1]}
-   	    IFS='test'
-   	    read -ra str <<< ${str[0]}
-
-   	    echo "${str[4]}"	
-	fi
-}
-
-hw4_parse () {
-	echo "$(hw3_parse "$1")"
-}
-
-hw5_parse () {
-   	read -ra str <<< $1
-	IFS='.'
-	read -ra str <<< ${str[-1]}
-	echo "${str[0]}"
-}
-
-if [ $# -eq 0 ]; then
-    echo Expected hw name
-    exit 0
-fi
-
-if [[ ! ($(type -t "$HW"_parse) == function) ]]; then
-	echo Script for $HW not found, try updating the script by running ./validate.sh update
-	exit 1
-fi
-
-if [ -e $ANS_PATH ]; then
-    rm -rf $ANS_PATH
-fi
-
-if [ $USE_FORMAL == "true" ]; then
-	cp -r /home/share/$HW/formalData $ANS_PATH
-else
-	if [ $HW == "hw5" ]; then
-		mkdir $ANS_PATH
-		cp -r /home/share/hw5/testcase2/* $ANS_PATH/	
-		cp -r /home/share/hw5/testcase3/* $ANS_PATH/	
-		cp -r /home/share/hw5/testcase4/* $ANS_PATH/	
-		cp -r /home/share/hw5/testcase5/* $ANS_PATH/	
-		mv $ANS_PATH/result_002 $ANS_PATH/result002
-		mv $ANS_PATH/result_003 $ANS_PATH/result003
-		mv $ANS_PATH/result_004 $ANS_PATH/result004
-		cp /home/share/hw5/testcase1/corpus1.txt $ANS_PATH/corpus_1.txt
-		cp /home/share/hw5/testcase1/query1.txt $ANS_PATH/query_1.txt
-		cp /home/share/hw5/testcase1/result1 $ANS_PATH/
-	else
-		cp -r /home/share/$HW $ANS_PATH
-	fi
-fi
-if [ -v TEST_PATH ]; then
-	cp $TEST_PATH/* $ANS_PATH
-fi
-
-if ! [ -e $RES_PATH ]; then
-    mkdir $RES_PATH
-fi
-rm $RES_PATH/*
-
-make --directory $HW_PATH -k clean all
-
 run_tests () {
-	in_pre=$1
-	in_post=$2
-	out_pre=$3
-	out_post=$4
-    for file in $ANS_PATH/"$in_pre"*"$in_post"; do
-		OLD_IFS=$IFS
-		IFS="_"
-
-		N="$("$HW"_parse "$file")"
-
-		IFS=$OLD_IFS
+	args=${HW}_args[@]
+	for N in ${!args}; do
 
 		echo "[ Test case $N ]"
 
-		if [ $MEASURE_TIME == "true" ]; then
-			if [ "$HW" == "hw1" ]; then
-				exec_and_measure "$N" "$out_pre" "$out_post"
-			elif [ "$HW" == "hw5" ]; then
-				inputs="$file $ANS_PATH/query_$N.txt"
-				exec_and_measure "$inputs" "$out_pre" "$out_post"
-			else
-				exec_and_measure "$file" "$out_pre" "$out_post"
-			fi
+		if [ $MEASURE_TIME == "true" ];then
+			cmd='xargs -I {} bash -c "$HW_EXEC ${!inputs} > $RES_PATH/${!result}"'
+			exec_and_measure "$N" "$cmd"
 		else
-			if [ "$HW" == "hw1" ]; then
-				$HW_EXEC "$N" > $RES_PATH/"$out_pre"$N"$out_post"
-			elif [ "$HW" == "hw5" ]; then
-				inputs="$file $ANS_PATH/query_$N.txt"
-				$HW_EXEC $inputs > $RES_PATH/"$out_pre"$N"$out_post"
-			else
-				$HW_EXEC "$file" > $RES_PATH/"$out_pre"$N"$out_post"
-			fi
+			inputs=${HW}_inputs
+			result=${HW}_result
+			echo $N | xargs -I {} bash -c "$HW_EXEC ${!inputs} > $RES_PATH/${!result}"
 		fi
-		
-		if [ $DIFF_DETAIL == "true" ]; then
-        	diff -s $ANS_PATH/"$out_pre""$N""$out_post" $RES_PATH/"$out_pre""$N""$out_post"
-		else
-        	diff -sq $ANS_PATH/"$out_pre""$N""$out_post" $RES_PATH/"$out_pre""$N""$out_post"
-		fi
+		echo $N | xargs -I {} bash -c "diff -sq $TEST_PATH/${!result} $RES_PATH/${!result}"
 
 		echo ""
-    done
-
+	done
 }
 
-if [ "$USE_FORMAL" == "true" ]; then
-	run_tests "${f_input_prefix["$HW"]}" "${f_input_postfix["$HW"]}" "${f_output_prefix["$HW"]}" "${f_output_postfix["$HW"]}"
-else
-	run_tests "${input_prefix["$HW"]}" "${input_postfix["$HW"]}" "${output_prefix["$HW"]}" "${output_postfix["$HW"]}"
-fi
+run_tests

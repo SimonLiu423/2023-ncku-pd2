@@ -53,7 +53,9 @@ ANS_PATH=$HW_PATH/answer
 RES_PATH=$HW_PATH/results
 TEST_PATH=$ANS_PATH
 
-if [ "$HW" == "hw5" ] || [ "$HW" == "hw6" ]; then
+if [ "$USE_FORMAL" == "true" ]; then
+	TEST_PATH="$TEST_PATH/formalData"
+elif [ "$HW" == "hw5" ] || [ "$HW" == "hw6" ]; then
 	TEST_PATH="$TEST_PATH/testcase{}"
 fi
 
@@ -62,35 +64,6 @@ if [ $# -eq 0 ]; then
     exit 0
 fi
 
-# if [[ ! ($(type -t "$HW"_parse) == function) ]]; then
-# 	echo Script for $HW not found, try updating the script by running ./validate.sh update
-# 	exit 1
-# fi
-
-if [ -e $ANS_PATH ]; then
-    rm -rf $ANS_PATH/*
-else
-	mkdir $ANS_PATH
-fi
-
-
-if [ $USE_FORMAL == "true" ]; then
-	cp -r /home/share/$HW/formalData/* $ANS_PATH/
-else
-	cp -r /home/share/$HW/* $ANS_PATH/
-fi
-
-if [ -v CUSTOM_PATH ]; then
-	cp $CUSTOM_PATH/* $ANS_PATH
-fi
-
-if ! [ -e $RES_PATH ]; then
-    mkdir $RES_PATH
-fi
-rm $RES_PATH/*
-
-make --directory $HW_PATH -k clean all
-
 hw1_args=(1 120 158 370 850 1000)
 hw2_args=(1 2 3)
 hw3_args=(0 1 2 3 4 5)
@@ -98,6 +71,7 @@ hw4_args=(1 2 3 4)
 hw5_args=(1 2 3 4 5)
 hw6_args=(1)
 
+hw1_inputs="{}"
 hw2_inputs="$TEST_PATH/hw2_test{}.csv"
 hw3_inputs="$TEST_PATH/hw3_test{}.csv"
 hw4_inputs="$TEST_PATH/hw4_test{}.csv"
@@ -111,11 +85,62 @@ hw4_result="result_{}"
 hw5_result="result_00{}"
 hw6_result="result_corpus{}_query{}_3"
 
+hw1_args_f=(10 25 68 123 157 235 453 586 787 999)
+hw2_args_f=(1 2 3 4 5 6 7 8 9 10)
+hw3_args_f=(1 2 3 4 5 6 7 8 9 10)
+
+hw1_inputs_f="{}"
+hw2_inputs_f="$TEST_PATH/hw2_test{}.csv"
+hw3_inputs_f="$TEST_PATH/problem_{}.csv"
+
+hw1_result_f="{}_output.txt"
+hw2_result_f="result_{}"
+hw3_result_f="answer_{}"
+
+
+temp=${HW}_inputs
+if [[ -z "${!temp}" ]]; then
+	echo Script for $HW not found, try updating the script by running ./validate.sh update
+	exit 1
+fi
+
+if [ "$USE_FORMAL" == "true" ]; then
+	args=${HW}_args_f[@]
+	inputs=${HW}_inputs_f
+	result=${HW}_result_f
+	if [[ -z ${!inputs} ]]; then
+		echo "Script for formal data of $HW not found, try updating the script by running ./validate.sh update"
+		exit 1
+	fi
+else
+	args=${HW}_args[@]
+	inputs=${HW}_inputs
+	result=${HW}_result
+fi
+
+if [ -e $ANS_PATH ]; then
+    rm -rf $ANS_PATH/*
+else
+	mkdir $ANS_PATH
+fi
+
+cp -r /home/share/$HW/* $ANS_PATH/
+
+if [ -v CUSTOM_PATH ]; then
+	cp $CUSTOM_PATH/* $ANS_PATH
+fi
+
+if ! [ -e $RES_PATH ]; then
+    mkdir $RES_PATH
+fi
+rm $RES_PATH/*
+
+
+make --directory $HW_PATH -k clean all
+
 exec_and_measure () {
 	N=$1
 	cmd="$2"
-	inputs=${HW}_inputs
-	result=${HW}_result
 	for ((i=0; i < $MEASURE_SAMPLE; i++)); do
 	    { time echo $N | eval $cmd; } 2>&1
 	done | awk -F 'm' '
@@ -131,7 +156,6 @@ exec_and_measure () {
 }
 
 run_tests () {
-	args=${HW}_args[@]
 	for N in ${!args}; do
 
 		echo "[ Test case $N ]"
@@ -140,8 +164,6 @@ run_tests () {
 			cmd='xargs -I {} bash -c "$HW_EXEC ${!inputs} > $RES_PATH/${!result}"'
 			exec_and_measure "$N" "$cmd"
 		else
-			inputs=${HW}_inputs
-			result=${HW}_result
 			echo $N | xargs -I {} bash -c "$HW_EXEC ${!inputs} > $RES_PATH/${!result}"
 		fi
 		echo $N | xargs -I {} bash -c "diff -sq $TEST_PATH/${!result} $RES_PATH/${!result}"

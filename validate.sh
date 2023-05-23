@@ -166,7 +166,11 @@ run_tests () {
 		else
 			echo $N | xargs -I {} bash -c "$HW_EXEC ${!inputs} > $RES_PATH/${!result}"
 		fi
-		echo $N | xargs -I {} bash -c "diff -sq $TEST_PATH/${!result} $RES_PATH/${!result}"
+		if [ "$DIFF_DETAIL" == "true" ];then
+			echo $N | xargs -I {} bash -c "diff -s $TEST_PATH/${!result} $RES_PATH/${!result}"	
+		else
+			echo $N | xargs -I {} bash -c "diff -sq $TEST_PATH/${!result} $RES_PATH/${!result}"
+		fi
 
 		echo ""
 	done

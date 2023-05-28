@@ -6,7 +6,7 @@ print_usage () {
 	echo "  -m		Measure execution time"
 	echo "  -d		Print diff detail"
 	echo "  -n <cnt>	Measure execution time by taking the mean of running the program <cnt> times. Default is 20"
-#	echo "  -t <path>	Also copies test data from <path>"
+	echo "  -t <path>	Also copies test data from <path>"
 	echo "  -f		Use formal test cases"
 	exit 1
 }
@@ -30,15 +30,16 @@ MEASURE_TIME="false"
 MEASURE_SAMPLE=20
 DIFF_DETAIL="false"
 USE_FORMAL="false"
+MY_RESULT="false"
 
-while getopts ":mdn:f" OPTION
+while getopts ":mdn:ft" OPTION
 do
 	case "${OPTION}" in
 		m ) MEASURE_TIME="true";;
 		d ) DIFF_DETAIL="true";;
 		f ) USE_FORMAL="true";;
 		n ) MEASURE_SAMPLE=${OPTARG};;
-#		t ) CUSTOM_PATH=${OPTARG};;
+		t ) MY_RESULT="true";;
 		\?) echo "$0: Error: Invalid option: -${OPTARG}" >&2; exit 1;;
 		: ) echo "$0: Error: option -${OPTARG} requires an argument" >&2; exit 1;;
 	esac
@@ -169,10 +170,19 @@ run_tests () {
 				else
 					echo $N | xargs -I {} bash -c "$HW_EXEC ${!inputs} $i > $RES_PATH/${!result}$i"
 				fi
+
 				if [ "$DIFF_DETAIL" == "true" ];then
-					echo $N | xargs -I {} bash -c "diff -s $TEST_PATH/${!result}$i $RES_PATH/${!result}$i"	
+					if [ $MY_RESULT == "true" ]; then
+						echo $N | xargs -I {} bash -c "diff -s /tmp/hw6_2/${!result}$i $RES_PATH/${!result}$i"	
+					else
+						echo $N | xargs -I {} bash -c "diff -s $TEST_PATH/${!result}$i $RES_PATH/${!result}$i"	
+					fi 
 				else
-					echo $N | xargs -I {} bash -c "diff -sq $TEST_PATH/${!result}$i $RES_PATH/${!result}$i"
+					if [ $MY_RESULT == "true" ]; then
+						echo $N | xargs -I {} bash -c "diff -sq /tmp/hw6_2/${!result}$i $RES_PATH/${!result}$i"
+					else
+						echo $N | xargs -I {} bash -c "diff -sq $TEST_PATH/${!result}$i $RES_PATH/${!result}$i"
+					fi
 				fi
 			done
 		else

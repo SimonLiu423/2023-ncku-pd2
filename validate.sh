@@ -10,7 +10,6 @@ print_usage () {
 	echo "  -f		Use formal test cases"
 	exit 1
 }
-
 update () {
 	echo "Updating validate.sh..."
 	SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
@@ -69,21 +68,21 @@ hw2_args=(1 2 3)
 hw3_args=(0 1 2 3 4 5)
 hw4_args=(1 2 3 4)
 hw5_args=(1 2 3 4 5)
-hw6_args=(1)
+hw6_args=(1 2 3 4 5)
 
 hw1_inputs="{}"
 hw2_inputs="$TEST_PATH/hw2_test{}.csv"
 hw3_inputs="$TEST_PATH/hw3_test{}.csv"
 hw4_inputs="$TEST_PATH/hw4_test{}.csv"
 hw5_inputs="$TEST_PATH/corpus_00{}.txt $TEST_PATH/query_00{}.txt"
-hw6_inputs="$TEST_PATH/corpus{} $TEST_PATH/query{} 3"
+hw6_inputs="$TEST_PATH/corpus{} $TEST_PATH/query{}"
 
 hw1_result="result_{}"
 hw2_result="result_{}"
 hw3_result="result_{}"
 hw4_result="result_{}"
 hw5_result="result_00{}"
-hw6_result="result_corpus{}_query{}_3"
+hw6_result="corpus{}_query{}_"
 
 hw1_args_f=(10 25 68 123 157 235 453 586 787 999)
 hw2_args_f=(1 2 3 4 5 6 7 8 9 10)
@@ -125,6 +124,7 @@ else
 fi
 
 cp -r /home/share/$HW/* $ANS_PATH/
+mv $ANS_PATH/testcase1/result_corpus1_query1_3 $ANS_PATH/testcase1/corpus1_query1_3
 
 # if [ -v CUSTOM_PATH ]; then
 # 	cp $CUSTOM_PATH/* $ANS_PATH
@@ -160,16 +160,33 @@ run_tests () {
 
 		echo "[ Test case $N ]"
 
-		if [ $MEASURE_TIME == "true" ];then
-			cmd='xargs -I {} bash -c "$HW_EXEC ${!inputs} > $RES_PATH/${!result}"'
-			exec_and_measure "$N" "$cmd"
+		if [ "$HW" == "hw6" ]; then
+			for ((i=1; i <= 3; i++)); do
+				echo "[ k = $i ]"
+				if [ $MEASURE_TIME == "true" ];then
+						cmd="xargs -I {} bash -c "'"$HW_EXEC ${!inputs} '$i' > $RES_PATH/${!result}$i"'
+						exec_and_measure "$N" "$cmd"
+				else
+					echo $N | xargs -I {} bash -c "$HW_EXEC ${!inputs} $i > $RES_PATH/${!result}$i"
+				fi
+				if [ "$DIFF_DETAIL" == "true" ];then
+					echo $N | xargs -I {} bash -c "diff -s $TEST_PATH/${!result}$i $RES_PATH/${!result}$i"	
+				else
+					echo $N | xargs -I {} bash -c "diff -sq $TEST_PATH/${!result}$i $RES_PATH/${!result}$i"
+				fi
+			done
 		else
-			echo $N | xargs -I {} bash -c "$HW_EXEC ${!inputs} > $RES_PATH/${!result}"
-		fi
-		if [ "$DIFF_DETAIL" == "true" ];then
-			echo $N | xargs -I {} bash -c "diff -s $TEST_PATH/${!result} $RES_PATH/${!result}"	
-		else
-			echo $N | xargs -I {} bash -c "diff -sq $TEST_PATH/${!result} $RES_PATH/${!result}"
+			if [ $MEASURE_TIME == "true" ];then
+				cmd='xargs -I {} bash -c "$HW_EXEC ${!inputs} > $RES_PATH/${!result}"'
+				exec_and_measure "$N" "$cmd"
+			else
+				echo $N | xargs -I {} bash -c "$HW_EXEC ${!inputs} > $RES_PATH/${!result}"
+			fi
+			if [ "$DIFF_DETAIL" == "true" ];then
+				echo $N | xargs -I {} bash -c "diff -s $TEST_PATH/${!result} $RES_PATH/${!result}"	
+			else
+				echo $N | xargs -I {} bash -c "diff -sq $TEST_PATH/${!result} $RES_PATH/${!result}"
+			fi
 		fi
 
 		echo ""

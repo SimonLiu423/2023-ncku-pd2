@@ -83,7 +83,7 @@ hw2_result="result_{}"
 hw3_result="result_{}"
 hw4_result="result_{}"
 hw5_result="result_00{}"
-hw6_result="corpus{}_query{}_"
+hw6_result="result_corpus{}_query{}_"
 
 hw1_args_f=(10 25 68 123 157 235 453 586 787 999)
 hw2_args_f=(1 2 3 4 5 6 7 8 9 10)
@@ -125,7 +125,6 @@ else
 fi
 
 cp -r /home/share/$HW/* $ANS_PATH/
-mv $ANS_PATH/testcase1/result_corpus1_query1_3 $ANS_PATH/testcase1/corpus1_query1_3
 
 # if [ -v CUSTOM_PATH ]; then
 # 	cp $CUSTOM_PATH/* $ANS_PATH

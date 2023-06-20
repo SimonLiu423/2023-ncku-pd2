@@ -55,7 +55,7 @@ TEST_PATH=$ANS_PATH
 
 if [ "$USE_FORMAL" == "true" ]; then
 	TEST_PATH="$TEST_PATH/formalData"
-elif [ "$HW" == "hw5" ] || [ "$HW" == "hw6" ]; then
+elif [ "$HW" == "hw5" ] || [ "$HW" == "hw6" ] || [ "$HW" == "hw7" ]; then
 	TEST_PATH="$TEST_PATH/testcase{}"
 fi
 
@@ -70,6 +70,7 @@ hw3_args=(0 1 2 3 4 5)
 hw4_args=(1 2 3 4)
 hw5_args=(1 2 3 4 5)
 hw6_args=(1 2 3 4 5)
+hw7_args=(1 2 3 4)
 
 hw1_inputs="{}"
 hw2_inputs="$TEST_PATH/hw2_test{}.csv"
@@ -77,6 +78,7 @@ hw3_inputs="$TEST_PATH/hw3_test{}.csv"
 hw4_inputs="$TEST_PATH/hw4_test{}.csv"
 hw5_inputs="$TEST_PATH/corpus_00{}.txt $TEST_PATH/query_00{}.txt"
 hw6_inputs="$TEST_PATH/corpus{} $TEST_PATH/query{}"
+hw7_inputs="$TEST_PATH/corpus{} $TEST_PATH/query{}"
 
 hw1_result="result_{}"
 hw2_result="result_{}"
@@ -84,24 +86,27 @@ hw3_result="result_{}"
 hw4_result="result_{}"
 hw5_result="result_00{}"
 hw6_result="result_corpus{}_query{}_"
+hw7_result="result_"
 
 hw1_args_f=(10 25 68 123 157 235 453 586 787 999)
 hw2_args_f=(1 2 3 4 5 6 7 8 9 10)
 hw3_args_f=(1 2 3 4 5 6 7 8 9 10)
+hw4_args_f=(1 2 3 4 5 6 7 8 9 10)
 
 hw1_inputs_f="{}"
 hw2_inputs_f="$TEST_PATH/hw2_test{}.csv"
 hw3_inputs_f="$TEST_PATH/problem_{}.csv"
+hw4_inputs_f="$TEST_PATH/problem_{}.csv"
 
 hw1_result_f="{}_output.txt"
 hw2_result_f="result_{}"
 hw3_result_f="answer_{}"
+hw4_result_f="answer_{}"
 
 
 temp=${HW}_inputs
 if [[ -z "${!temp}" ]]; then
-	echo Script for $HW not found, try updating the script by running ./validate.sh update
-	exit 1
+	echo Script for $HW not found, try updating the script by running ./validate.sh update exit 1
 fi
 
 if [ "$USE_FORMAL" == "true" ]; then
@@ -160,7 +165,7 @@ run_tests () {
 
 		echo "[ Test case $N ]"
 
-		if [ "$HW" == "hw6" ]; then
+		if [ "$HW" == "hw6" ] || [ "$HW" == "hw7" ]; then
 			for ((i=1; i <= 3; i++)); do
 				echo "[ k = $i ]"
 				if [ $MEASURE_TIME == "true" ];then

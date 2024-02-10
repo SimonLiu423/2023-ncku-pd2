@@ -2,7 +2,7 @@
 
 ## Description
 
-This is a bash script that helps validate your C++ code outputs for assignments in the course 2023 NCKU Program Design II.
+This is a bash script that helps validate your C++ code outputs for assignments in the course '2023 NCKU Program Design II'.
 
 ## Usage
 
